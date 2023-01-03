@@ -2,15 +2,17 @@
 using NerdStore.Core.DomainObjects;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace NerdStore.Catalogo.Domain
 {
     public  class Produto : Entity, IAggregateRoot
     {
-        public Produto(string nome, string descricao, bool ativo, decimal valor, Guid categoriaId, DateTime dataCadastro, string image)
+        public Produto(string nome, string descricao, bool ativo, decimal valor, Guid categoriaId, DateTime dataCadastro, string image, Dimensoes dimensoes)
         {
             Nome = nome;
             Descricao = descricao;
@@ -19,6 +21,9 @@ namespace NerdStore.Catalogo.Domain
             CategoriaId = categoriaId;
             DataCadastro = dataCadastro;
             Image = image;
+            Dimensoes = dimensoes;
+
+            Validar();
         }
 
         public Guid CategoriaId { get; private set; }
@@ -29,6 +34,7 @@ namespace NerdStore.Catalogo.Domain
         public DateTime DataCadastro { get; private set; }
         public string Image { get; private set; }
         public int QuantidadeEstoque { get; private set; }
+        public Dimensoes Dimensoes { get; private set; }
 
         public Categoria Categoria { get; private set; }
 
@@ -45,12 +51,14 @@ namespace NerdStore.Catalogo.Domain
 
         public void AlterarDescricao(string descricao)
         {
+            Validacoes.ValidarSeVazio(descricao, "O campo Descricao do produto não pode estar vazio");
             Descricao = descricao;
         }
 
         public void DebitarEstoque(int quantidade)
         {
             if (quantidade < 0) quantidade *= -1;
+            if (!PossuiEstoque(quantidade)) throw new DomainException("Estoque insuficiente");
             QuantidadeEstoque -= quantidade;
         }
 
@@ -66,25 +74,13 @@ namespace NerdStore.Catalogo.Domain
 
         public void Validar()
         {
+            Validacoes.ValidarSeVazio(Nome, "O campo Nome do produto não pode estar vazio");
+            Validacoes.ValidarSeVazio(Descricao, "O campo Descricao do produto não pode estar vazio");
+            Validacoes.ValidarSeIgual(CategoriaId, Guid.Empty, "O campo Categoria do produto não pode estar vazio");
+            Validacoes.ValidarSeMenorQue(Valor, 0, "O campo Valor do produto não pode estar vazio");
+            Validacoes.ValidarSeVazio(Image, "O campo Imagem do produto não pode estar vazio");
 
         }
-        
-    }
 
-    public class Categoria : Entity
-    {
-        public Categoria(string nome, int codigo)
-        {
-            Nome = nome;
-            Codigo = codigo;
-        }
-
-        public string Nome { get; private set; }
-        public int Codigo { get; private set; }
-
-        public override string ToString()
-        {
-            return $"{Nome} - {Codigo}";
-        }
     }
 }

@@ -22,7 +22,7 @@ namespace NerdStore.Catalogo.Data.Mappings
             builder
                 .HasMany(c => c.Produtos)
                 .WithOne(p => p.Categoria)
-                .HasForeignKey(p => p.Categoria);
+                .HasForeignKey(p => p.CategoriaId);
 
             builder.ToTable("Categorias");
         }

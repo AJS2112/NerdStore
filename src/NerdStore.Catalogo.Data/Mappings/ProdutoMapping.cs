@@ -34,11 +34,11 @@ namespace NerdStore.Catalogo.Data.Mappings
                     .HasColumnType("int");
 
                 cm.Property(c => c.Largura)
-                    .HasColumnName("Altura")
+                    .HasColumnName("Largura")
                     .HasColumnType("int");
 
                 cm.Property(c => c.Profundidade)
-                    .HasColumnName("Altura")
+                    .HasColumnName("Profundidade")
                     .HasColumnType("int");
             });
 

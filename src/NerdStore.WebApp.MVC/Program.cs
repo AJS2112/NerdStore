@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using NerdStore.Catalogo.Application.AutoMapper;
 using NerdStore.Catalogo.Data;
+using NerdStore.Vendas.Data;
 using NerdStore.WebApp.MVC.Setup;
 
 namespace NerdStore.WebApp.MVC
@@ -15,6 +16,9 @@ namespace NerdStore.WebApp.MVC
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.AddDbContext<CatalogoContext>(options => 
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddDbContext<VendasContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddAutoMapper(typeof(DomainToViewModelMappingProfile), typeof(ViewModelToDomainMappingProfile));

@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using NerdStore.Core.Commnunication.Mediator;
 using NerdStore.Core.Messages;
+using NerdStore.Core.Messages.CommonMessages.Notifications;
 using NerdStore.Vendas.Domain;
 using System;
 using System.Collections.Generic;
@@ -12,10 +14,12 @@ namespace NerdStore.Vendas.Application.Commands
     public class PedidoCommandHandler : IRequestHandler<AdicionarItemPedidoCommand, bool>
     {
         private readonly IPedidoRepository _pedidoRepository;
+        private readonly IMediatrHandler _mediatrHandler;
 
-        public PedidoCommandHandler(IPedidoRepository pedidoRepository)
+        public PedidoCommandHandler(IPedidoRepository pedidoRepository, IMediatrHandler mediatrHandler)
         {
             _pedidoRepository = pedidoRepository;
+            _mediatrHandler = mediatrHandler;
         }
     
         public async Task<bool> Handle(AdicionarItemPedidoCommand command, CancellationToken cancellationToken)
@@ -56,7 +60,7 @@ namespace NerdStore.Vendas.Application.Commands
 
             foreach (var error in request.ValidationResult.Errors)
             {
-                // lançar evento de erro
+                _mediatrHandler.PublicarNotificacao(new DomainNotification(request.MessageType, error.ErrorMessage));
             }
 
             return false;

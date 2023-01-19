@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NerdStore.Core.Commnunication.Mediator;
 using NerdStore.Core.Data;
 using NerdStore.Core.Messages;
 using NerdStore.Vendas.Domain;
@@ -12,6 +13,13 @@ namespace NerdStore.Vendas.Data
 {
     public class VendasContext : DbContext, IUnitOfWork
     {
+        private readonly IMediatrHandler _mediatrHandler;
+
+        public VendasContext(IMediatrHandler mediatrHandler)
+        {
+            mediatrHandler = _mediatrHandler;
+        }
+        
         public VendasContext(DbContextOptions options) : base(options)
         {
 
@@ -54,7 +62,10 @@ namespace NerdStore.Vendas.Data
                 }
             }
 
-            return await base.SaveChangesAsync() > 0;
+            var sucesso = await base.SaveChangesAsync() > 0;
+            if (sucesso) await _mediatrHandler.PublicarEventos(this);
+
+            return sucesso;
         }
 
     }

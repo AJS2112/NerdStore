@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Views\Carrinho\" />
     <Folder Include="Views\Vitrine\" />
     <Folder Include="wwwroot\Images\" />
   </ItemGroup>

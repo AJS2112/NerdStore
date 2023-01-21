@@ -14,7 +14,7 @@ namespace NerdStore.Catalogo.Data.Mappings
                 .HasDefaultValueSql("NEXT VALUE FOR MinhaSequencia");
 
             // 1 : N => Pedido : PedidoItems
-            builder.HasMany(c => c.PedidoItems)
+            builder.HasMany(c => c.PedidoItens)
                 .WithOne(c => c.Pedido)
                 .HasForeignKey(c => c.PedidoId);
 

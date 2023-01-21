@@ -20,7 +20,7 @@ namespace NerdStore.Vendas.Domain
         public PedidoStatus PedidoStatus { get; private set; }
 
         private readonly List<PedidoItem> _pedidoItems;
-        public IReadOnlyCollection<PedidoItem> PedidoItems => _pedidoItems;
+        public IReadOnlyCollection<PedidoItem> PedidoItens => _pedidoItems;
 
         // EF Rel.
         public virtual Voucher Voucher { get; private set; }
@@ -41,7 +41,7 @@ namespace NerdStore.Vendas.Domain
 
         public void CalcularValorPedido()
         {
-            ValorTotal = PedidoItems.Sum(item => item.CalcularValor());
+            ValorTotal = PedidoItens.Sum(item => item.CalcularValor());
             CalcularValorTotalDesconto();
         }
 
@@ -114,7 +114,7 @@ namespace NerdStore.Vendas.Domain
         {
             if (!item.EhValido()) return;
 
-            var itemExistente = PedidoItems.FirstOrDefault(i => i.ProdutoId == item.Id);
+            var itemExistente = PedidoItens.FirstOrDefault(i => i.ProdutoId == item.Id);
 
             if (itemExistente == null) throw new DomainException("O item não pertence ao pedido");
             _pedidoItems.Remove(item);
@@ -127,7 +127,7 @@ namespace NerdStore.Vendas.Domain
             if (!item.EhValido()) return;
             item.AssociarPedido(Id);
 
-            var itemExistente = PedidoItems.FirstOrDefault(i => i.PedidoId == item.Id);
+            var itemExistente = PedidoItens.FirstOrDefault(i => i.PedidoId == item.Id);
 
             if (itemExistente == null) throw new DomainException("O item não pertence ao pedido");
 

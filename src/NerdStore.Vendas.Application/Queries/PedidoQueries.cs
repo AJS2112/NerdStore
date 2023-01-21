@@ -36,7 +36,7 @@ namespace NerdStore.Vendas.Application.Queries
                 carrinho.VoucherCodigo = pedido.Voucher.Codigo;
             }
 
-            foreach (var item in pedido.PedidoItems)
+            foreach (var item in pedido.PedidoItens)
             {
                 carrinho.Items.Add(new CarrinhoItemViewModel
                 {

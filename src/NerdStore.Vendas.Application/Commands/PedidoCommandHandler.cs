@@ -1,6 +1,9 @@
 ﻿using MediatR;
 using NerdStore.Core.Commnunication.Mediator;
+using NerdStore.Core.DomainObjects.DTOs;
+using NerdStore.Core.Extensions;
 using NerdStore.Core.Messages;
+using NerdStore.Core.Messages.CommonMessages.IntegrationEvents;
 using NerdStore.Core.Messages.CommonMessages.Notifications;
 using NerdStore.Vendas.Application.Events;
 using NerdStore.Vendas.Domain;
@@ -16,7 +19,9 @@ namespace NerdStore.Vendas.Application.Commands
         IRequestHandler<AdicionarItemPedidoCommand, bool>,
         IRequestHandler<AtualizarItemPedidoCommand, bool>,
         IRequestHandler<RemoverItemPedidoCommand, bool>,
-        IRequestHandler<AplicarVoucherPedidoCommand, bool>
+        IRequestHandler<AplicarVoucherPedidoCommand, bool>,
+        IRequestHandler<IniciarPedidoCommand, bool>
+
     {
         private readonly IPedidoRepository _pedidoRepository;
         private readonly IMediatrHandler _mediatrHandler;
@@ -48,7 +53,7 @@ namespace NerdStore.Vendas.Application.Commands
 
                 if (pedidoItemExistente)
                 {
-                    _pedidoRepository.AtualizarItem(pedido.PedidoItems.FirstOrDefault(i => i.ProdutoId == pedidoItem.Id));
+                    _pedidoRepository.AtualizarItem(pedido.PedidoItens.FirstOrDefault(i => i.ProdutoId == pedidoItem.Id));
                 }
                 else
                 {
@@ -155,6 +160,29 @@ namespace NerdStore.Vendas.Application.Commands
 
             _pedidoRepository.Atualizar(pedido);
 
+            return await _pedidoRepository.UnitOfWork.Commit();
+        }
+
+        public async Task<bool> Handle(IniciarPedidoCommand command, CancellationToken cancellationToken)
+        {
+            if (!ValidarComando(command)) return false;
+
+            var pedido = await _pedidoRepository.ObterPedidoRascunhoPorClienteId(command.ClienteId);
+            if (pedido == null)
+            {
+                await _mediatrHandler.PublicarNotificacao(new DomainNotification("pedido", "Pedido não encontrado"));
+                return false;
+            }
+
+            pedido.IniciarPedido();
+
+            var itensList = new List<Item>();
+            pedido.PedidoItens.ForEach(i => itensList.Add(new Item { Id = i.ProdutoId, Quantidade = i.Quantidade }));
+            var listaProdutosPedido = new ListaProdutosPedido { PedidoId = pedido.Id, Itens = itensList };
+
+            pedido.AdicionarEvento(new PedidoIniciadoEvent(pedido.Id, pedido.ClienteId, pedido.ValorTotal, listaProdutosPedido,  command.NomeCartao, command.NumeroCartao, command.NumeroCartao, command.CvvCartao));
+
+            _pedidoRepository.Atualizar(pedido);
             return await _pedidoRepository.UnitOfWork.Commit();
         }
 

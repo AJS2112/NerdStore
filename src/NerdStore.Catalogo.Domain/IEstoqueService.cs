@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NerdStore.Core.DomainObjects.DTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,8 @@ namespace NerdStore.Catalogo.Domain
     public interface IEstoqueService : IDisposable
     {
         Task<bool> DebitarEstoque(Guid produtoId, int quantidade);
+        Task<bool> DebitarListaProdutosPedido(ListaProdutosPedido listaProdutos);
         Task<bool> ReporEstoque(Guid produtoId, int quantidade);
+        Task<bool> ReporListaProdutosPedido(ListaProdutosPedido listaProdutos);
     }
 }

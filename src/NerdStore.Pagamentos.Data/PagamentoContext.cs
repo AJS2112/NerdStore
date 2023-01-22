@@ -2,27 +2,26 @@
 using NerdStore.Core.Commnunication.Mediator;
 using NerdStore.Core.Data;
 using NerdStore.Core.Messages;
-using NerdStore.Vendas.Domain;
+using NerdStore.Pagamentos.Business;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NerdStore.Vendas.Data
+namespace NerdStore.Pagamentos.Data
 {
-    public class VendasContext : DbContext, IUnitOfWork
+    public class PagamentoContext : DbContext, IUnitOfWork
     {
         private readonly IMediatrHandler _mediatrHandler;
-        
-        public VendasContext(DbContextOptions<VendasContext> options, IMediatrHandler mediatrHandler) : base(options)
+
+        public PagamentoContext(DbContextOptions<PagamentoContext> options, IMediatrHandler mediatrHandler) : base(options)
         {
             _mediatrHandler = mediatrHandler;
         }
 
-        public DbSet<Pedido> Pedidos { get; set; }
-        public DbSet<PedidoItem> PedidoItems { get; set; }
-        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<Pagamento> Pagamentos { get; set; }
+        public DbSet<Transacao> Transacoes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,13 +33,11 @@ namespace NerdStore.Vendas.Data
 
             modelBuilder.Ignore<Event>();
 
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(VendasContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(PagamentoContext).Assembly);
 
             foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys())) relationship.DeleteBehavior = DeleteBehavior.Cascade;
-
-            modelBuilder.HasSequence<int>("MinhaSequencia").StartsAt(1000).IncrementsBy(1);
-            base.OnModelCreating(modelBuilder);
         }
+
 
         public async Task<bool> Commit()
         {
@@ -62,6 +59,5 @@ namespace NerdStore.Vendas.Data
 
             return sucesso;
         }
-
     }
 }

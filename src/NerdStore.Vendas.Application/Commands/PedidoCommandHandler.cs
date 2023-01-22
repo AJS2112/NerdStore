@@ -3,6 +3,7 @@ using NerdStore.Core.Commnunication.Mediator;
 using NerdStore.Core.DomainObjects.DTOs;
 using NerdStore.Core.Extensions;
 using NerdStore.Core.Messages;
+using NerdStore.Core.Messages.CommonMessages.DomainEvents;
 using NerdStore.Core.Messages.CommonMessages.IntegrationEvents;
 using NerdStore.Core.Messages.CommonMessages.Notifications;
 using NerdStore.Vendas.Application.Events;
@@ -20,7 +21,11 @@ namespace NerdStore.Vendas.Application.Commands
         IRequestHandler<AtualizarItemPedidoCommand, bool>,
         IRequestHandler<RemoverItemPedidoCommand, bool>,
         IRequestHandler<AplicarVoucherPedidoCommand, bool>,
-        IRequestHandler<IniciarPedidoCommand, bool>
+        IRequestHandler<IniciarPedidoCommand, bool>,
+        IRequestHandler<FinalizarPedidoCommand, bool>,
+        IRequestHandler<CancelarProcessamentoPedidoEstornarEstoqueCommand, bool>,
+        IRequestHandler<CancelarProcessamentoPedidoCommand, bool>
+
 
     {
         private readonly IPedidoRepository _pedidoRepository;
@@ -183,6 +188,52 @@ namespace NerdStore.Vendas.Application.Commands
             pedido.AdicionarEvento(new PedidoIniciadoEvent(pedido.Id, pedido.ClienteId, pedido.ValorTotal, listaProdutosPedido,  command.NomeCartao, command.NumeroCartao, command.NumeroCartao, command.CvvCartao));
 
             _pedidoRepository.Atualizar(pedido);
+            return await _pedidoRepository.UnitOfWork.Commit();
+        }
+
+        public async Task<bool> Handle(FinalizarPedidoCommand command, CancellationToken cancellationToken)
+        {
+            var pedido = await _pedidoRepository.ObterPorId(command.PedidoId);
+            if (pedido == null)
+            {
+                await _mediatrHandler.PublicarNotificacao(new DomainNotification("pedido", "Pedido não encontrado"));
+                return false;
+            }
+
+            pedido.FinalizarPedido();
+
+            pedido.AdicionarEvento(new PedidoFinalizadoEvent(command.PedidoId));
+            return await _pedidoRepository.UnitOfWork.Commit();
+        }
+
+        public async Task<bool> Handle(CancelarProcessamentoPedidoEstornarEstoqueCommand command, CancellationToken cancellationToken)
+        {
+            var pedido = await _pedidoRepository.ObterPorId(command.PedidoId);
+            if (pedido == null)
+            {
+                await _mediatrHandler.PublicarNotificacao(new DomainNotification("pedido", "Pedido não encontrado"));
+                return false;
+            }
+
+            var itensList = new List<Item>();
+            pedido.PedidoItens.ForEach(i => itensList.Add(new Item { Id = i.Id, Quantidade = i.Quantidade }));
+            var listaProdutosPedido = new ListaProdutosPedido { PedidoId = pedido.Id, Itens = itensList };
+
+            pedido.AdicionarEvento(new PedidoProcessamentoCanceladoEvent(command.PedidoId, pedido.ClienteId, listaProdutosPedido));
+            pedido.TornarRascunho();
+            return await _pedidoRepository.UnitOfWork.Commit();
+        }
+
+        public async Task<bool> Handle(CancelarProcessamentoPedidoCommand command, CancellationToken cancellationToken)
+        {
+            var pedido = await _pedidoRepository.ObterPorId(command.PedidoId);
+            if (pedido == null)
+            {
+                await _mediatrHandler.PublicarNotificacao(new DomainNotification("pedido", "Pedido não encontrado"));
+                return false;
+            }
+
+            pedido.TornarRascunho();
             return await _pedidoRepository.UnitOfWork.Commit();
         }
 
